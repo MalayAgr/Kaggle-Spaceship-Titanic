@@ -73,7 +73,7 @@ class FeatureEngineer:
         if engineer_map.keys().isdisjoint(exclude):
             recognized = ", ".join(engineer_map)
             raise ValueError(
-                f"exclude has unrecognized features. Recognized features: {recognized}"
+                f"exclude has unrecognized features. Recognized features: {recognized}."
             )
 
         return [
@@ -81,8 +81,12 @@ class FeatureEngineer:
         ]
 
     def __call__(
-        self, df: pd.DataFrame, *, copy: bool = False, exclude: list[str] = None
+        self, df: pd.DataFrame, *, copy: bool = False, exclude: list[str] | str = None
     ) -> pd.DataFrame:
+
+        if isinstance(exclude, str):
+            exclude = [exclude]
+
         engineers = self.get_engineers(exclude=exclude)
 
         df = df.copy() if copy is True else df
