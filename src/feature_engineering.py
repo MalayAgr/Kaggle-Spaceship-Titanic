@@ -22,6 +22,11 @@ class FeatureEngineer:
         self.alone = alone
         self.total_expense_missing = total_expense_missing
 
+
+    @property
+    def supported_features(self) -> list[str]:
+        return list(self.engineer_map().keys())
+
     def _from_passenger_id(self, df: pd.DataFrame) -> pd.DataFrame:
         split_id = df["PassengerId"].str.split("_", expand=True)
 
