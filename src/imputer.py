@@ -112,9 +112,13 @@ class CategoricalImputer:
 
 
 def numeric_imputer(
-    df: pd.DataFrame, numeric_cols: list[str], has_labels: bool = False
+    df: pd.DataFrame,
+    numeric_cols: list[str],
+    *,
+    copy: bool = False,
+    has_labels: bool = True,
 ) -> pd.DataFrame:
-    x = df
+    x = df.copy() if copy is True else df
 
     if has_labels is True:
         transported = df["Transported"]
