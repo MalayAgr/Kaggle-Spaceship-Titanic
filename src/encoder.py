@@ -62,8 +62,15 @@ def encode_features(
     one_hot_cols: list[str] = None,
     label_encoding_cols: list[str] = None,
     *,
+    drop_and_restore: list[str] = None,
     has_labels: bool = True,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
+
+    if drop_and_restore is not None:
+        dropped = train_df[drop_and_restore]
+        train_df = train_df.drop(drop_and_restore, axis=1)
+
+
     df, train_idx, test_idx, transported = concat_train_test(
         train_df=train_df, test_df=test_df, has_labels=has_labels
     )
@@ -79,5 +86,8 @@ def encode_features(
     train_df, test_df = split_train_test(
         df=df, train_index=train_idx, test_index=test_idx, transported=transported
     )
+
+    if drop_and_restore is not None:
+        train_df[drop_and_restore] = dropped
 
     return train_df, test_df
