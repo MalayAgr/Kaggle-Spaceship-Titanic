@@ -34,9 +34,11 @@ def split_train_test(
     return tr_df, te_df
 
 
-def _convert_bool2int(df: pd.DataFrame, exclude: list[str] = None) -> pd.DataFrame:
-    if exclude is not None:
-        columns = df.columns.drop(exclude)
+def convert_bool2int(df: pd.DataFrame, exclude: list[str] = None) -> pd.DataFrame:
+    columns = df.columns if exclude is None else df.columns.drop(exclude)
+
+    if columns.empty:
+        return df
 
     columns = [col for col in columns if df[col].dtype.name == "bool"]
     df[columns] = df[columns].astype(int)
@@ -44,7 +46,7 @@ def _convert_bool2int(df: pd.DataFrame, exclude: list[str] = None) -> pd.DataFra
     return df
 
 
-def _label_encoder(df: pd.DataFrame, columns: list[str]) -> pd.DataFrame:
+def label_encoder(df: pd.DataFrame, columns: list[str]) -> pd.DataFrame:
     for column in columns:
         levels = df[column].value_counts().index
         mapping = {level: idx for idx, level in enumerate(levels)}
@@ -66,10 +68,10 @@ def encode_features(
         train_df=train_df, test_df=test_df, has_labels=has_labels
     )
 
-    df = _convert_bool2int(df, exclude=bool_exclude)
+    df = convert_bool2int(df, exclude=bool_exclude)
 
     if label_encoding_cols is not None:
-        df = _label_encoder(df, columns=label_encoding_cols)
+        df = label_encoder(df, columns=label_encoding_cols)
 
     if one_hot_cols is not None:
         df = pd.get_dummies(df, columns=one_hot_cols)
