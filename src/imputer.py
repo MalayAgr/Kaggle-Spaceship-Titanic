@@ -2,6 +2,7 @@ from typing import Callable
 
 import numpy as np
 import pandas as pd
+from sklearn import impute, preprocessing
 
 
 class CategoricalImputer:
@@ -108,3 +109,26 @@ class CategoricalImputer:
             df = imputer(df)
 
         return df
+
+
+def numeric_imputer(
+    df: pd.DataFrame, numeric_cols: list[str], has_labels: bool = False
+) -> pd.DataFrame:
+    x = df
+
+    if has_labels is True:
+        transported = df["Transported"]
+        x = df.drop("Transported", axis=1)
+
+    # Scale values
+    scaler = preprocessing.StandardScaler()
+    x[numeric_cols] = scaler.fit_transform(x[numeric_cols])
+
+    # Impute missing values
+    imputer = impute.KNNImputer(n_neighbors=5, weights="distance")
+    x = imputer.fit_transform(x)
+
+    if has_labels is True:
+        x = np.hstack((x, transported.values.reshape(-1, 1)))
+
+    return pd.DataFrame(x, columns=df.columns, index=df.index)
