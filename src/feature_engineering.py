@@ -22,7 +22,6 @@ class FeatureEngineer:
         self.alone = alone
         self.total_expense_missing = total_expense_missing
 
-
     @property
     def supported_features(self) -> list[str]:
         return list(self.engineer_map().keys())
@@ -39,8 +38,9 @@ class FeatureEngineer:
         return df
 
     def _from_missing_values(self, df: pd.DataFrame) -> pd.DataFrame:
-        for column in self.missing_value_cols:
-            df[f"{column}_missing"] = df[column].isna()
+        if self.missing_value_cols is not None:
+            for column in self.missing_value_cols:
+                df[f"{column}_missing"] = df[column].isna()
 
         if self.total_expense_missing is True:
             df["TotalExpense_missing"] = (
