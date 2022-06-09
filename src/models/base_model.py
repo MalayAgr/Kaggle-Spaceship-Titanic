@@ -7,6 +7,7 @@ import numpy as np
 import optuna
 import pandas as pd
 import sklearn
+from lightgbm import train
 from sklearn import metrics
 
 
@@ -25,19 +26,19 @@ class BaseModel:
     name: str = None
     REGISTRY: dict[str, Type[BaseModel]] = {}
 
-    def __init__(self, train_df: pd.DataFrame, test_df: pd.DataFrame) -> None:
-        self.train_df = train_df
-        self.test_df = test_df
-
     def __init_subclass__(cls, **kwargs) -> None:
         if (name := cls.name) is not None:
             BaseModel.REGISTRY[name] = cls
 
-    def preprocess_datasets(self) -> tuple[pd.DataFrame, pd.DataFrame]:
-        return self.train_df, self.test_df
+    def preprocess_datasets(
+        self, train_df: pd.DataFrame, test_df: pd.DataFrame
+    ) -> tuple[pd.DataFrame, pd.DataFrame]:
+        return train_df, test_df
 
-    def hyperparameter_search(self, n_trials: int) -> dict[str, Any]:
-        train_df, test_df = self.preprocess_datasets()
+    def hyperparameter_search(
+        self, train_df: pd.DataFrame, test_df: pd.DataFrame, n_trials: int
+    ) -> dict[str, Any]:
+        train_df, test_df = self.preprocess_datasets(train_df, test_df)
 
         objective = self.objective
         objective = functools.partial(objective, train_df=train_df, test_df=test_df)
@@ -58,10 +59,19 @@ class BaseModel:
 
         return study.best_params
 
+    def optuna_parameters(self, trial: optuna.Trial) -> dict[str, Any]:
+        raise NotImplementedError("Base classes need to implement optuna_parameters().")
+
     def objective(
         self, trial: optuna.Trial, train_df: pd.DataFrame, test_df: pd.DataFrame
     ) -> float:
-        raise NotImplementedError("Base classes need to implement objective().")
+        params = self.optuna_parameters(trial=trial)
+
+        _, _, acc = self.train(
+            train_df=train_df, test_df=test_df, params=params, verbose=False
+        )
+
+        return acc
 
     def init_classifier(self, params: dict[str, Any]) -> Classifier:
         raise NotImplementedError("Base classes need to implement init_classifier().")
@@ -78,7 +88,7 @@ class BaseModel:
 
     def _train_fold(
         self,
-        df: pd.DataFrame,
+        train_df: pd.DataFrame,
         test_df: pd.DataFrame,
         fold: int,
         params: dict[str, Any],
@@ -86,12 +96,12 @@ class BaseModel:
         *,
         verbose: bool = True,
     ) -> tuple[np.ndarray, float]:
-        train = df[df["kfold"] != fold]
+        train = train_df[train_df["kfold"] != fold]
 
         y_train = train["Transported"]
         X_train = train.drop(drop, axis=1)
 
-        val = df[df["kfold"] == fold]
+        val = train_df[train_df["kfold"] == fold]
 
         y_val = val["Transported"]
         X_val = val.drop(drop, axis=1)
@@ -118,22 +128,27 @@ class BaseModel:
         if verbose is True:
             print(f"\tFold {fold + 1} - Accuracy = {acc: .4f}")
 
-        df.loc[val.index, "preds"] = clf.predict_proba(X_val)[:, 1]
+        train_df.loc[val.index, "preds"] = clf.predict_proba(X_val)[:, 1]
 
         return clf.predict_proba(test_df)[:, 1], acc
 
     def train(
         self,
-        df: pd.DataFrame,
+        train_df: pd.DataFrame,
         test_df: pd.DataFrame,
         params: dict[str, Any],
         *,
+        preprocess: bool = False,
         verbose: bool = True,
     ) -> tuple[np.ndarray, np.ndarray, float]:
-        df = df.copy()
+
+        if preprocess is True:
+            train_df, test_df = self.preprocess_datasets(train_df=train_df, test_df=test_df)
+
+        train_df = train_df.copy()
         test_df = test_df.drop("PassengerId", axis=1)
 
-        df["preds"] = pd.NA
+        train_df["preds"] = pd.NA
 
         drop = ["Transported", "preds", "kfold"]
 
@@ -141,7 +156,7 @@ class BaseModel:
 
         for fold in range(5):
             test_pred, acc = self._train_fold(
-                df=df,
+                train_df=train_df,
                 test_df=test_df,
                 fold=fold,
                 params=params,
@@ -160,7 +175,7 @@ class BaseModel:
         test_preds = np.vstack(test_preds)
         test_preds = np.mean(test_preds, axis=0)
 
-        return df["preds"].values, test_preds, acc
+        return train_df["preds"].values, test_preds, acc
 
 
 class BaseOptunaCVModel(BaseModel):
