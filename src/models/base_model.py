@@ -26,6 +26,9 @@ class BaseModel:
     name: str = None
     REGISTRY: dict[str, Type[BaseModel]] = {}
 
+    def __init__(self, *, use_pruner: bool = True) -> None:
+        self.use_pruner = use_pruner
+
     def __init_subclass__(cls, **kwargs) -> None:
         if (name := cls.name) is not None:
             BaseModel.REGISTRY[name] = cls
@@ -36,12 +39,7 @@ class BaseModel:
         return train_df, test_df
 
     def hyperparameter_search(
-        self,
-        train_df: pd.DataFrame,
-        test_df: pd.DataFrame,
-        n_trials: int,
-        *,
-        use_pruner: bool = True,
+        self, train_df: pd.DataFrame, test_df: pd.DataFrame, n_trials: int
     ) -> dict[str, Any]:
         train_df, test_df = self.preprocess_datasets(train_df, test_df)
 
@@ -50,7 +48,7 @@ class BaseModel:
 
         sampler = optuna.samplers.TPESampler(seed=42)
 
-        pruner = optuna.pruners.HyperbandPruner() if use_pruner is True else None
+        pruner = optuna.pruners.HyperbandPruner() if self.use_pruner is True else None
 
         study = optuna.create_study(
             sampler=sampler,
