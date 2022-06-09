@@ -36,7 +36,12 @@ class BaseModel:
         return train_df, test_df
 
     def hyperparameter_search(
-        self, train_df: pd.DataFrame, test_df: pd.DataFrame, n_trials: int
+        self,
+        train_df: pd.DataFrame,
+        test_df: pd.DataFrame,
+        n_trials: int,
+        *,
+        use_pruner: bool = True,
     ) -> dict[str, Any]:
         train_df, test_df = self.preprocess_datasets(train_df, test_df)
 
@@ -44,9 +49,12 @@ class BaseModel:
         objective = functools.partial(objective, train_df=train_df, test_df=test_df)
 
         sampler = optuna.samplers.TPESampler(seed=42)
+
+        pruner = optuna.pruners.HyperbandPruner() if use_pruner is True else None
+
         study = optuna.create_study(
             sampler=sampler,
-            pruner=optuna.pruners.HyperbandPruner(),
+            pruner=pruner,
             direction="maximize",
         )
 
@@ -143,12 +151,14 @@ class BaseModel:
     ) -> tuple[np.ndarray, np.ndarray, float]:
 
         if preprocess is True:
-            train_df, test_df = self.preprocess_datasets(train_df=train_df, test_df=test_df)
+            train_df, test_df = self.preprocess_datasets(
+                train_df=train_df, test_df=test_df
+            )
 
         train_df = train_df.copy()
         test_df = test_df.drop("PassengerId", axis=1)
 
-        train_df["preds"] = pd.NA
+        train_df["preds"] = np.nan
 
         drop = ["Transported", "preds", "kfold"]
 
