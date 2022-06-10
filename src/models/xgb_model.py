@@ -30,9 +30,10 @@ class XGBClassifierModel(BaseModel):
             ),
         }
 
-        params["callbacks"] = [
-            optuna.integration.XGBoostPruningCallback(trial, "validation_1-logloss")
-        ]
+        if self.use_pruner is True:
+            params["callbacks"] = [
+                optuna.integration.XGBoostPruningCallback(trial, "validation_1-logloss")
+            ]
 
         return params
 

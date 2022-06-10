@@ -72,7 +72,7 @@ class Ensemble:
         test_df = self.meta_test_df
 
         klass = BaseModel.REGISTRY[model_name]
-        model = klass()
+        model = klass(meta_mode=True)
 
         print(f"Training {model.long_name} as level 2 model...")
 

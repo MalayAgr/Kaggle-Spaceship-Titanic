@@ -4,12 +4,22 @@ import lightgbm as lgb
 import numpy as np
 import optuna
 import pandas as pd
+from sklearn import metrics
 
 from ..config import Config
 from .base_model import BaseModel
 
 
-def _lgb_datasets(train_df: pd.DataFrame, test_df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
+def accuracy_score(
+    y_true: np.ndarray, y_pred: np.ndarray, weight: np.ndarray, group: np.ndarray
+) -> tuple[str, float, bool]:
+    acc = metrics.accuracy_score(y_true, y_pred >= 0.5)
+    return "accuracy", acc, True
+
+
+def _lgb_datasets(
+    train_df: pd.DataFrame, test_df: pd.DataFrame
+) -> tuple[pd.DataFrame, pd.DataFrame]:
     # Make copies so that original datasets remain unchanged
     train_df = train_df.copy()
     test_df = test_df.copy()
@@ -73,8 +83,8 @@ class LGBMClassifierModel(BaseModel):
     name = "lgb"
     long_name = "LightGBM"
 
-    def __init__(self) -> None:
-        super().__init__(preprocess=True)
+    def __init__(self, *, meta_mode: bool = False) -> None:
+        super().__init__(preprocess=True, meta_mode=meta_mode)
 
     def preprocess_datasets(
         self, train_df: pd.DataFrame, test_df: pd.DataFrame
@@ -95,9 +105,10 @@ class LGBMClassifierModel(BaseModel):
             "subsample_for_bin": trial.suggest_int("subsample_for_bin", 2000, 8000),
         }
 
-        params["callbacks"] = [
-            optuna.integration.LightGBMPruningCallback(trial, "logloss", "valid_1")
-        ]
+        if self.use_pruner is True:
+            params["callbacks"] = [
+                optuna.integration.LightGBMPruningCallback(trial, "accuracy", "valid_1")
+            ]
 
         return params
 
@@ -129,6 +140,6 @@ class LGBMClassifierModel(BaseModel):
         callbacks = params.get("callbacks", []) + [lgb.log_evaluation(period=0)]
         return {
             "eval_set": [(X_train, y_train), (X_val, y_val)],
-            "eval_metric": "logloss",
+            "eval_metric": ["logloss", accuracy_score],
             "callbacks": callbacks,
         }

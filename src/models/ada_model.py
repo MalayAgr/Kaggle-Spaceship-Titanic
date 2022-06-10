@@ -10,8 +10,8 @@ class AdaBoostModel(BaseModel):
     name = "ada"
     long_name = "AdaBoost"
 
-    def __init__(self) -> None:
-        super().__init__(use_pruner=False)
+    def __init__(self, *, meta_mode: bool = False) -> None:
+        super().__init__(use_pruner=False, meta_mode=meta_mode)
 
     def optuna_parameters(self, trial: optuna.Trial) -> dict[str, Any]:
         params = {

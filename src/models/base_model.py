@@ -26,9 +26,16 @@ class BaseModel:
     long_name: str = None
     REGISTRY: dict[str, Type[BaseModel]] = {}
 
-    def __init__(self, *, use_pruner: bool = True, preprocess: bool = False) -> None:
+    def __init__(
+        self,
+        *,
+        use_pruner: bool = True,
+        preprocess: bool = False,
+        meta_mode: bool = False,
+    ) -> None:
         self.use_pruner = use_pruner
         self.preprocess = preprocess
+        self.meta_mode = meta_mode
 
     def __init_subclass__(cls, **kwargs) -> None:
         if (name := cls.name) is not None:
@@ -146,7 +153,7 @@ class BaseModel:
         verbose: bool = True,
     ) -> tuple[np.ndarray, np.ndarray, float]:
 
-        if self.preprocess is True:
+        if self.meta_mode is False and self.preprocess is True:
             train_df, test_df = self.preprocess_datasets(
                 train_df=train_df, test_df=test_df
             )
