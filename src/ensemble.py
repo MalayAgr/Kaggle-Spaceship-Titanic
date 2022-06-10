@@ -56,7 +56,7 @@ class Ensemble:
 
             print("\tTraining model with best parameters...\n")
 
-            preds, test_preds, acc = model.train(
+            preds, test_preds, _ = model.train(
                 train_df=self.train_df,
                 test_df=self.test_df,
                 params=params,
