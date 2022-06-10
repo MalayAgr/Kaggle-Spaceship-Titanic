@@ -1,8 +1,11 @@
 import argparse
+import warnings
 
 import pandas as pd
 from src.config import Config
 from src.ensemble import Ensemble
+
+warnings.filterwarnings("ignore")
 
 
 def main(args: argparse.Namespace):
@@ -46,7 +49,7 @@ if __name__ == "__main__":
 
     parser.add_argument(
         "-l1t",
-        "-l1_trials",
+        "--l1_trials",
         type=int,
         required=False,
         default=100,
@@ -55,7 +58,7 @@ if __name__ == "__main__":
 
     parser.add_argument(
         "-l2t",
-        "-l2_trials",
+        "--l2_trials",
         type=int,
         required=False,
         default=20,
