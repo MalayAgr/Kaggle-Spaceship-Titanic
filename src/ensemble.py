@@ -7,10 +7,17 @@ from .models import BaseModel
 
 class Ensemble:
     def __init__(
-        self, train_df: pd.DataFrame, test_df: pd.DataFrame, exclude: list[str] = None
+        self,
+        train_df: pd.DataFrame,
+        test_df: pd.DataFrame,
+        exclude: list[str] = None,
+        l1_trials: int = Config.L1_N_TRIALS,
+        l2_trials: int = Config.L2_N_TRIALS,
     ) -> None:
         self.train_df = train_df
         self.test_df = test_df
+        self.l1_trials = l1_trials
+        self.l2_trials = l2_trials
 
         self.exclude = exclude
 
@@ -42,7 +49,7 @@ class Ensemble:
             params = model.hyperparameter_search(
                 train_df=self.train_df,
                 test_df=self.test_df,
-                n_trials=Config.L1_N_TRIALS,
+                n_trials=self.l1_trials,
             )
 
             print(f"\tBest parameters: {params}")
@@ -73,7 +80,7 @@ class Ensemble:
         params = model.hyperparameter_search(
             train_df=train_df,
             test_df=test_df,
-            n_trials=Config.L2_N_TRIALS,
+            n_trials=self.l2_trials,
         )
 
         print(f"\tBest params: {params}\n")

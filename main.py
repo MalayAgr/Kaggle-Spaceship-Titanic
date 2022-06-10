@@ -12,7 +12,16 @@ def main(args: argparse.Namespace):
     if (exclude := args.exclude) is not None:
         exclude = exclude.split(",")
 
-    ensemble = Ensemble(train_df=train_df, test_df=test_df, exclude=exclude)
+    l1_trials = args.l1_trials
+    l2_trials = args.l2_trials
+
+    ensemble = Ensemble(
+        train_df=train_df,
+        test_df=test_df,
+        exclude=exclude,
+        l1_trials=l1_trials,
+        l2_trials=l2_trials,
+    )
 
     ensemble.train_level_one_models()
 
@@ -41,7 +50,25 @@ if __name__ == "__main__":
         type=int,
         required=False,
         default=100,
-        help="Number of Optuna trials for Level 1 models."
+        help="Number of Optuna trials for Level 1 models.",
+    )
+
+    parser.add_argument(
+        "-l2t",
+        "-l2_trials",
+        type=int,
+        required=False,
+        default=20,
+        help="Number of Optuna trials for Level 2 model.",
+    )
+
+    parser.add_argument(
+        "-l2m",
+        "--l2_model",
+        type=str,
+        required=False,
+        default="lr",
+        help="Name of the model to use as the level 2 model.",
     )
 
     args = parser.parse_args()
