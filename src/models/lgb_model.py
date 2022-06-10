@@ -105,10 +105,9 @@ class LGBMClassifierModel(BaseModel):
             "subsample_for_bin": trial.suggest_int("subsample_for_bin", 2000, 8000),
         }
 
-        if self.use_pruner is True:
-            params["callbacks"] = [
-                optuna.integration.LightGBMPruningCallback(trial, "accuracy", "valid_1")
-            ]
+        params["callbacks"] = [
+            optuna.integration.LightGBMPruningCallback(trial, "accuracy", "valid_1")
+        ]
 
         return params
 
