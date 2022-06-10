@@ -60,13 +60,14 @@ class Ensemble:
 
             print("\tDone!\n")
 
-    def train_level_two_model(self) -> pd.DataFrame:
-        print("Training a Logistic Regression model as level 2 model...")
-
+    def train_level_two_model(self, model_name="lr") -> pd.DataFrame:
         train_df = self.meta_train_df
         test_df = self.meta_test_df
 
-        model = BaseModel.REGISTRY["lr"]()
+        klass = BaseModel.REGISTRY[model_name]
+        model = klass()
+
+        print(f"Training {model.long_name} as level 2 model...")
 
         print("\tFinding optimal hyperparameters using Optuna...\n")
         params = model.hyperparameter_search(
