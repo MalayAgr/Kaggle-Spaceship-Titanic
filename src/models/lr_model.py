@@ -8,6 +8,7 @@ from .base_model import BaseModel
 
 class LogisticRegressionModel(BaseModel):
     name = "lr"
+    long_name = "Logistic Regression"
 
     def __init__(self) -> None:
         super().__init__(use_pruner=False)
