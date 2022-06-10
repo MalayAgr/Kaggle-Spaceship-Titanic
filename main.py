@@ -68,7 +68,7 @@ if __name__ == "__main__":
         type=str,
         required=False,
         default="lr",
-        help="Name of the model to use as the level 2 model.",
+        help="Name of the model to use as the Level 2 model.",
     )
 
     args = parser.parse_args()
