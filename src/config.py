@@ -5,6 +5,7 @@ class Config:
     DATA_DIR = "data"
     L1_N_TRIALS = 100
     L2_N_TRIALS = 20
+    N_JOBS = 2
 
     @classmethod
     def filepath(cls, filename):
