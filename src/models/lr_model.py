@@ -1,7 +1,7 @@
 from typing import Any
 
 import optuna
-from sklearn.linear_model import LogisticRegression
+from sklearn import linear_model
 
 from .base_model import BaseModel
 
@@ -22,7 +22,9 @@ class LogisticRegressionModel(BaseModel):
             ),
         }
 
-    def init_classifier(self, params: dict[str, Any]) -> LogisticRegression:
+    def init_classifier(
+        self, params: dict[str, Any]
+    ) -> linear_model.LogisticRegression:
         init_params = {
             "tol": params.get("tol", 1e-4),
             "C": params.get("C", 1.0),
@@ -30,4 +32,4 @@ class LogisticRegressionModel(BaseModel):
             "max_iter": 1000,
             "verbose": False,
         }
-        return LogisticRegression(**init_params)
+        return linear_model.LogisticRegression(**init_params)
