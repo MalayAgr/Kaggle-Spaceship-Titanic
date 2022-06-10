@@ -6,7 +6,6 @@ from typing import Any, Protocol, Type
 import numpy as np
 import optuna
 import pandas as pd
-import sklearn
 from lightgbm import train
 from sklearn import metrics
 
@@ -24,10 +23,12 @@ class Classifier(Protocol):
 
 class BaseModel:
     name: str = None
+    long_name: str = None
     REGISTRY: dict[str, Type[BaseModel]] = {}
 
-    def __init__(self, *, use_pruner: bool = True) -> None:
+    def __init__(self, *, use_pruner: bool = True, preprocess: bool = False) -> None:
         self.use_pruner = use_pruner
+        self.preprocess = preprocess
 
     def __init_subclass__(cls, **kwargs) -> None:
         if (name := cls.name) is not None:
@@ -41,7 +42,8 @@ class BaseModel:
     def hyperparameter_search(
         self, train_df: pd.DataFrame, test_df: pd.DataFrame, n_trials: int
     ) -> dict[str, Any]:
-        train_df, test_df = self.preprocess_datasets(train_df, test_df)
+        v = optuna.logging.get_verbosity()
+        optuna.logging.set_verbosity(optuna.logging.WARNING)
 
         objective = self.objective
         objective = functools.partial(objective, train_df=train_df, test_df=test_df)
@@ -55,9 +57,6 @@ class BaseModel:
             pruner=pruner,
             direction="maximize",
         )
-
-        v = optuna.logging.get_verbosity()
-        optuna.logging.set_verbosity(optuna.logging.WARNING)
 
         study.optimize(objective, n_trials=n_trials)
 
@@ -144,11 +143,10 @@ class BaseModel:
         test_df: pd.DataFrame,
         params: dict[str, Any],
         *,
-        preprocess: bool = False,
         verbose: bool = True,
     ) -> tuple[np.ndarray, np.ndarray, float]:
 
-        if preprocess is True:
+        if self.preprocess is True:
             train_df, test_df = self.preprocess_datasets(
                 train_df=train_df, test_df=test_df
             )
