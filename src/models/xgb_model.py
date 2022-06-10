@@ -3,7 +3,6 @@ from typing import Any
 import numpy as np
 import optuna
 import xgboost as xgb
-from sklearn import metrics
 
 from ..config import Config
 from .base_model import BaseModel
