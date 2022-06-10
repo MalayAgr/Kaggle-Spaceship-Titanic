@@ -182,7 +182,3 @@ class BaseModel:
         test_preds = np.mean(test_preds, axis=0)
 
         return train_df["preds"].values, test_preds, acc
-
-
-class BaseOptunaCVModel(BaseModel):
-    pass
