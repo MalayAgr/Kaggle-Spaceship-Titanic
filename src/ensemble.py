@@ -28,7 +28,7 @@ class Ensemble:
 
         self.models = [BaseModel.REGISTRY[model]() for model in models]
 
-        columns = [f"{m}_preds" for m in models]
+        columns = [f"{model.name}_preds" for model in self.models]
         extra_cols = ["Transported", "kfold"]
 
         meta_train_df = pd.DataFrame(columns=columns + extra_cols)
