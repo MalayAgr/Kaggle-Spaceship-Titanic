@@ -6,7 +6,6 @@ from typing import Any, Protocol, Type
 import numpy as np
 import optuna
 import pandas as pd
-from lightgbm import train
 from sklearn import metrics
 
 
@@ -189,3 +188,7 @@ class BaseModel:
         test_preds = np.mean(test_preds, axis=0)
 
         return train_df["preds"].values, test_preds, acc
+
+
+def supported_models() -> dict[str, str]:
+    return {model.name: model.long_name for model in BaseModel.REGISTRY.values()}
