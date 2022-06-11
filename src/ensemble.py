@@ -87,12 +87,13 @@ class Ensemble:
 
         print("\tTraining model with optimal parameters...\n")
 
-        _, test_preds, _ = model.train(
+        preds, test_preds, _ = model.train(
             train_df=train_df, test_df=test_df, params=params
         )
 
         print("\tDone!")
 
+        self.meta_train_df["preds"] = (preds >= 0.5).astype(int)
         self.meta_test_df["Transported"] = test_preds >= 0.5
 
         return self.meta_test_df
